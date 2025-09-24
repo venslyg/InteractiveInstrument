@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Music Stage</title>
+    <link rel="stylesheet" href="InstrumentStyle.css">
+</head>
+<body>
+
+    <h1>INTERACTIVE STAGE</h1>
+
+    <div id="stage">
+        <div class="instrument-container" data-instrument="piano">
+            <div class="spotlight"></div>
+            <img src=".Assets/images/piano.png" alt="Piano">
+        </div>
+        <div class="instrument-container" data-instrument="drums">
+            <div class="spotlight"></div>
+            <img src=".Assets/images/drums.png" alt="Drums">
+        </div>
+    </div>
+
+    <div id="keyboard-guide">
+        <p>Click an instrument to play</p>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. SETUP INSTRUMENTS ---
+            const piano = new Tone.Sampler({
+                urls: { "C4": "C4.mp3", "D4": "D4.mp3", "E4": "E4.mp3" },
+                baseUrl: "assets/sounds/piano/",
+            }).toDestination();
+
+            const drums = new Tone.Sampler({
+                urls: { "C4": "base.unknown", "D4": "snare.unknown", "E4": "highhate.unknown" },
+                baseUrl: "assets/sounds/drums/",
+            }).toDestination();
+
+            const instruments = { piano, drums };
+            let currentInstrument = null;
+            let currentInstrumentName = '';
+
+            // --- 2. DEFINE KEY MAPPINGS and GUIDES ---
+            const keyMap = {
+                piano: { 'a': 'C4', 's': 'D4', 'd': 'E4' },
+                drums: { 'a': 'C4', 's': 'D4', 'd': 'E4' }
+            };
+            
+            const guideText = {
+                piano: "KEYS: [A] = C4 | [S] = D4 | [D] = E4",
+                drums: "KEYS: [A] = Kick | [S] = Snare | [D] = Hi-Hat"
+            };
+
+            const instrumentElements = document.querySelectorAll('.instrument-container');
+            const keyboardGuide = document.getElementById('keyboard-guide');
+
+            // --- 3. HANDLE INSTRUMENT SELECTION ---
+            instrumentElements.forEach(el => {
+                el.addEventListener('click', () => {
+                    // Start audio on first click
+                    Tone.start();
+
+                    // Remove .selected from all others
+                    instrumentElements.forEach(i => i.classList.remove('selected'));
+                    
+                    // Add .selected to the clicked one
+                    el.classList.add('selected');
+
+                    // Set the current instrument
+                    currentInstrumentName = el.dataset.instrument;
+                    currentInstrument = instruments[currentInstrumentName];
+                    
+                    // Update and show the guide text
+                    keyboardGuide.innerHTML = `<p>${guideText[currentInstrumentName]}</p>`;
+                    keyboardGuide.classList.add('visible');
+                });
+            });
+
+            // --- 4. HANDLE KEYBOARD PLAYING ---
+            document.addEventListener('keydown', (event) => {
+                if (!currentInstrument) return; // Guard clause
+
+                const key = event.key.toLowerCase();
+                const note = keyMap[currentInstrumentName]?.[key];
+
+                if (note) {
+                    // Play the sound
+                    currentInstrument.triggerAttack(note);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
